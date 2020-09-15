@@ -1,0 +1,14 @@
+﻿using UnityEngine;
+
+public class Cure : Ability
+//tutorial ability, see "blink" for new ability
+{
+    int _healAmount = 25;
+
+    public override void Use(Transform origin, Transform target)
+    {
+        if (target == null) { return; }
+        Debug.Log("Cast Cure on " + target.gameObject.name);
+        target.GetComponent<Health>()?.Heal(_healAmount);
+    }
+}
