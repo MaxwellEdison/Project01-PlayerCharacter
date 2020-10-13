@@ -65,7 +65,7 @@ public class ThirdPersonMovement : MonoBehaviour
             zoom += zoomStep;
             Mathf.Clamp(zoom, zoomMin, zoomMax);
         }*/
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
         if (isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
@@ -75,7 +75,7 @@ public class ThirdPersonMovement : MonoBehaviour
             CheckIfStartedJumping();
             velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
         }
-
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
@@ -86,7 +86,7 @@ public class ThirdPersonMovement : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
-            if (isJumping == false || isFalling == false)
+            if (isGrounded)
             {
 
                     if (Input.GetButton("Sprint"))
@@ -105,7 +105,7 @@ public class ThirdPersonMovement : MonoBehaviour
                 
             } 
         }
-        else
+        else if(isGrounded)
         {
             CheckIfStoppedMoving();
         }
