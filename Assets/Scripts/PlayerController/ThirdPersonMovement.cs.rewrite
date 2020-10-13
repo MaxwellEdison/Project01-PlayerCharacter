@@ -1,0 +1,302 @@
+﻿using UnityEngine;
+using System;
+using System.Collections;
+using UnityEditor.Experimental.GraphView;
+
+public class ThirdPersonMovement : MonoBehaviour
+{
+    public enum PlayerAnimState
+    {
+        Run,
+        Jump,
+        Sprint,
+        Fall,
+        Idle
+    }
+    public PlayerAnimState plrState;
+    public event Action Idle = delegate { };
+    public event Action StartRunning = delegate { };
+    public event Action StartJumping = delegate { };
+    public event Action StartFalling = delegate { };
+    public event Action StopFalling = delegate { };
+    public event Action StartSprinting = delegate { };
+    public AnimationClip animJump;
+    public Animator charAnimator;
+    public CharacterController controller;
+    public Transform cam;
+    public float baseSpeed = 6f;
+    public float speed;
+    public float sprintMulti = 1.1f;
+    public float sprintSpeed
+    {
+        get { return baseSpeed * sprintMulti; }
+
+    }
+    public float jumpForce = 5f;
+    public float gravity = -9.8f;
+    Vector3 velocity;
+    public Transform groundCheck;
+    public float groundDistance = 0.4f;
+    public LayerMask groundMask;
+    public bool checkState = true;
+    public bool isGrounded;
+    public bool isMoving = false;
+    public bool isJumping = false;
+    public bool isFalling = false;
+    public bool isLanding = false;
+    public bool isSprinting = false;
+
+
+    public float turnSmooth = 0.1f;
+    float turnSmoothVelocity;
+
+    private void Start()
+    {
+        Idle?.Invoke();
+    }
+    // Update is called once per frame
+    void Update()
+    {
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+        switch (plrState)
+        {
+            case PlayerAnimState.Idle:
+                PlayerIdle();
+                break;
+            case PlayerAnimState.Run:
+                PlayerRun();
+                break;
+            case PlayerAnimState.Sprint:
+                PlayerSprint();
+                break;
+            case PlayerAnimState.Jump:
+                PlayerJump();
+                break;
+            case PlayerAnimState.Fall:
+                PlayerFall();
+                break;
+        }
+
+        
+
+        //check if you're grounded
+        if (isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
+        if (checkState)
+        {
+            if (isGrounded)
+            {
+                if (Input.GetButton("Jump"))
+                {
+                    SetPlayerState();
+                    isJumping = true;
+                    velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
+                }
+                if (!isJumping && !isFalling)
+                {
+
+                    if (direction.magnitude >= 0.1f)
+                    {
+                        isMoving = true;
+                        if (Input.GetButton("Sprint"))
+                        {
+                            isSprinting = true;
+                            speed = baseSpeed * sprintMulti;
+                        }
+                        else 
+                        {
+                            isSprinting = false;
+                            speed = baseSpeed;
+                        }
+                    }
+                    else
+                    {
+                        isMoving = false;
+                    }
+                }
+
+            }
+            checkState = false;
+        }
+
+
+
+        if (direction.magnitude >= 0.1f )
+        {
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmooth);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            controller.Move(moveDir.normalized * speed * Time.deltaTime);
+            isMoving = true;
+/*            if (isGrounded)
+            {
+                CheckIfStartedMoving();
+            }*/
+
+        }
+/*        else
+        {
+            CheckIfStoppedMoving();
+        }
+        if (Mathf.Abs(direction.y) <= 0.1f && isFalling && isGrounded)
+        {
+            CheckIfStopFalling();
+        }*/
+
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
+    }
+
+    private void SetPlayerState()
+    {
+        if (isGrounded)
+        {
+            if (isMoving)
+            {
+                if (isSprinting)
+                {
+                    plrState = PlayerAnimState.Sprint;
+                }
+                else
+                {
+                    plrState = PlayerAnimState.Run;
+                }
+            }
+            else
+            {
+                plrState = PlayerAnimState.Idle;
+            }
+        }
+        else
+        {
+            if (isJumping)
+            {
+                plrState = PlayerAnimState.Jump;
+            }
+            else
+            {
+                plrState = PlayerAnimState.Fall;
+            }
+        }
+    }
+    private void PlayerIdle()
+    {
+        Idle?.Invoke();
+        StartCoroutine("finishAnim");
+    }
+
+    private void PlayerRun()
+    {
+        StartRunning?.Invoke();
+        Debug.Log("Started Running");
+        StartCoroutine("finishAnim");
+    }
+
+    private void PlayerSprint()
+    {
+        StartRunning?.Invoke();
+        //StartSprinting?.Invoke();
+        Debug.Log("Started Sprinting");
+        StartCoroutine("finishAnim");
+    }
+
+    private void PlayerJump()
+    {
+        StartJumping?.Invoke();
+        //StartCoroutine("animJumpFinish");
+        StartCoroutine("finishAnim");
+    }
+
+    private void PlayerFall()
+    {
+        StartFalling?.Invoke();
+        StartCoroutine("finishAnim");
+    }
+    private void CheckIfStartedMoving()
+    {
+
+        if (isMoving == false && isSprinting == false)
+        {
+            StartRunning?.Invoke();
+            Debug.Log("Started Running");
+        }
+        else if (isMoving == true && isSprinting == true)
+        {
+            //for some reason these animations are bugged and I can't figure out why
+            StartRunning?.Invoke();
+            //StartSprinting?.Invoke();
+            Debug.Log("Started Sprinting");
+        }
+        
+    }
+    private void CheckIfStartedJumping()
+    {
+        //if I'm jumping, play jump animation
+        isJumping = true;
+        StartJumping?.Invoke();
+        Debug.Log("StartedJumping");
+        StartCoroutine("animJumpFinish");
+    }
+
+    IEnumerator finishAnim()
+    {
+        while (charAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.0f)
+            yield return null;
+        Debug.Log("wait over");
+        checkState = true;
+    }
+    IEnumerator animJumpFinish()
+    {
+        //wait until jump anim is over, then play fall anim
+        Debug.Log("started jumping coroutine");
+        while (charAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.0f)
+            yield return null;
+        isJumping = false;
+        checkState = true;
+        CheckIfFalling();
+    }
+
+    public void CheckIfFalling()
+    {
+        //fall anim
+        StartFalling?.Invoke();
+        Debug.Log("Started Falling");
+        isFalling = true;
+    }
+    public void CheckIfStopFalling()
+    {
+
+        if (isGrounded && isFalling)
+        {
+            isFalling = false;
+            isLanding = true;
+            StopFalling?.Invoke();
+            StartCoroutine("animLandFinish");
+        }
+
+    }
+    IEnumerator animLandFinish()
+    {
+        Debug.Log("started landing coroutine");
+        while (charAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.0f)
+            yield return null;
+        isLanding = false;
+        Idle?.Invoke();
+        Debug.Log("stopped landing");
+    }
+    private void CheckIfStoppedMoving()
+    {
+        if (isMoving == true)
+        {
+            Idle?.Invoke();
+            Debug.Log("Stopped Running");
+        }
+        isMoving = false;
+    }
+}

@@ -37,12 +37,7 @@ public class EnvironmentDamage : MonoBehaviour
         {
 
             GameObject player = other.gameObject;
-            Debug.Log("I damaged the player for " + dmgValue + " and they currently have " + player.GetComponent<Health>()._currentHealth + " hp");
-            player.GetComponent<Health>()._currentHealth -= dmgValue;
-            if(player.GetComponent<Health>()._currentHealth <= 0)
-            {
-                player.GetComponent<Health>().Kill();
-            }
+            player.GetComponent<Health>().Damage(dmgValue);
         }
     }
 }

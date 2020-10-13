@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
+using System.Collections;
+
 
 public class Player : MonoBehaviour
 {
@@ -8,7 +11,7 @@ public class Player : MonoBehaviour
 
     [SerializeField] Transform _testTarget = null;
 
-
+    AbilityUI abilityUI;
     public Transform CurrentTarget { get; private set; }
     public enum EquippedAbility
     {
@@ -25,6 +28,8 @@ public class Player : MonoBehaviour
         {
             _abilityLoadout?.EquipAbility(_startingAbility);
         }
+        abilityUI = GameObject.FindGameObjectWithTag("MainUI").GetComponent<AbilityUI>();
+        abilityUI.SkillUIChange("cure");
     }
     public void SetTarget(Transform newTarget)
     {
@@ -54,6 +59,7 @@ public class Player : MonoBehaviour
                 case EquippedAbility.Cure:
                     {
                         equippedAbility = EquippedAbility.Fireball;
+                        abilityUI.SkillUIChange("fireball");
                         Debug.Log("Equipped " + _abilities[1].name);
                         _abilityLoadout.EquipAbility(_abilities[1]);
                     }
@@ -61,6 +67,7 @@ public class Player : MonoBehaviour
                 case EquippedAbility.Fireball:
                     {
                         equippedAbility = EquippedAbility.Blink;
+                        abilityUI.SkillUIChange("blink");
                         Debug.Log("Equipped " + _abilities[2].name);
                         _abilityLoadout.EquipAbility(_abilities[2]);
                     }
@@ -68,6 +75,7 @@ public class Player : MonoBehaviour
                 case EquippedAbility.Blink:
                     {
                         equippedAbility = EquippedAbility.Cure;
+                        abilityUI.SkillUIChange("cure");
                         Debug.Log("Equipped " + _abilities[0].name);
                         _abilityLoadout.EquipAbility(_abilities[0]);
                     }

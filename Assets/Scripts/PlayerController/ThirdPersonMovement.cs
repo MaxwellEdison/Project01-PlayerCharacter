@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections;
+using Cinemachine;
 
 public class ThirdPersonMovement : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class ThirdPersonMovement : MonoBehaviour
     public Transform cam;
     public float baseSpeed = 6f;
     public float speed;
-    public float sprintMulti = 1.1f;
+    public float sprintMulti = 2f;
     public float sprintSpeed
     {
         get { return baseSpeed * sprintMulti; }
@@ -28,12 +29,19 @@ public class ThirdPersonMovement : MonoBehaviour
     public Transform groundCheck;
     public float groundDistance = 0.4f;
     public LayerMask groundMask;
-    bool isGrounded;
+    public bool isGrounded;
     public bool isMoving = false;
     public bool isJumping = false;
     public bool isFalling = false;
     public bool isLanding = false;
+    public bool sprintInput = false;
     public bool isSprinting = false;
+/*    public float zoom = 0f;
+    public float zoomStep = .1f;
+    public float zoomMin = 1f;
+    public float zoomMax = 3f;
+    public CinemachineFramingTransposer thirdPersonCam;*/
+
 
 
     public float turnSmooth = 0.1f;
@@ -41,11 +49,22 @@ public class ThirdPersonMovement : MonoBehaviour
 
     private void Start()
     {
+/*        thirdPersonCam = GameObject.FindGameObjectWithTag("3rdPersonCamera").GetComponent<CinemachineFramingTransposer>();*/
         Idle?.Invoke();
     }
     // Update is called once per frame
     void Update()
     {
+/*        thirdPersonCam.m_CameraDistance = zoom;
+        if (Input.GetAxis("Mouse ScrollWheel") > 0)
+        {
+            zoom -= zoomStep;
+            Mathf.Clamp(zoom, zoomMin, zoomMax);
+        } else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+        {
+            zoom += zoomStep;
+            Mathf.Clamp(zoom, zoomMin, zoomMax);
+        }*/
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
         if (isGrounded && velocity.y < 0)
         {
@@ -67,19 +86,24 @@ public class ThirdPersonMovement : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
-            CheckIfStartedMoving();
-            if (Input.GetButtonDown("Sprint"))
+            if (isJumping == false || isFalling == false)
             {
-                isSprinting = true;
-                speed = sprintSpeed;
-                this.gameObject.GetComponent<PlayerCharacterAnimator>().animRunSpd = sprintMulti;
-            }
-            else if(Input.GetButtonUp("Sprint"))
-            {
-                isSprinting = false;
-                speed = baseSpeed;
-                this.gameObject.GetComponent<PlayerCharacterAnimator>().animRunSpd = 1.0f;
-            }
+
+                    if (Input.GetButton("Sprint"))
+                    {
+                        CheckIfStartedSprinting();
+                        speed = sprintSpeed;
+                        gameObject.GetComponent<PlayerCharacterAnimator>().animRunSpd = sprintMulti;
+                    }
+                    if (!Input.GetButton("Sprint"))
+                    {
+                        isSprinting = false;
+                        CheckIfStartedMoving();
+                        speed = baseSpeed;
+                        gameObject.GetComponent<PlayerCharacterAnimator>().animRunSpd = 1.0f;
+                    }
+                
+            } 
         }
         else
         {
@@ -94,27 +118,34 @@ public class ThirdPersonMovement : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
+    private void CheckIfStartedSprinting()
+    {
+        if (isSprinting == false && isJumping == false)
+        {
+            StartSprinting?.Invoke();
+            Debug.Log("Started Sprinting");
+        }
+        isMoving = false;
+        isSprinting = true;
+    }
     private void CheckIfStartedMoving()
     {
 
-        if (isMoving == false && isSprinting == false)
-        {
-            StartRunning?.Invoke();
-            Debug.Log("Started Running");
-        }
-        else if (isMoving == true && isSprinting == true)
+        if (isMoving == false && isJumping == false)
         {
             //for some reason these animations are bugged and I can't figure out why
             StartRunning?.Invoke();
             //StartSprinting?.Invoke();
-            Debug.Log("Started Sprinting");
+            Debug.Log("Started Running");
         }
+        isSprinting = false;
         isMoving = true;
     }
     private void CheckIfStartedJumping()
     {
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (!isJumping && isGrounded)
         {
+
             isJumping = true;
             StartJumping?.Invoke();
             Debug.Log("StartedJumping");
@@ -133,8 +164,9 @@ public class ThirdPersonMovement : MonoBehaviour
 
     public void CheckIfFalling()
     {
-        if (!isGrounded && !isJumping)
+        if (!isGrounded && isJumping)
         {
+            isJumping = false;
             StartFalling?.Invoke();
             Debug.Log("Started Falling");
         }
@@ -158,6 +190,7 @@ public class ThirdPersonMovement : MonoBehaviour
         while (charAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.0f)
             yield return null;
         isLanding = false;
+        isMoving = false;
         Idle?.Invoke();
         Debug.Log("stopped landing");
     }
