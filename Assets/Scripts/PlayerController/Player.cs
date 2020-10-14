@@ -46,7 +46,7 @@ public class Player : MonoBehaviour
 
             ChangeAbility();
         }
-        if (Input.GetKeyDown(KeyCode.LeftControl))
+        if (Input.GetButtonDown("TestTarget"))
         {
             SetTarget(_testTarget);
         }

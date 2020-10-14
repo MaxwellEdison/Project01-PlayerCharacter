@@ -16,7 +16,7 @@ public class ThirdPersonMovement : MonoBehaviour
     public CharacterController controller;
     public Transform cam;
     public float baseSpeed = 6f;
-    public float speed;
+    public float speed = 6f;
     public float sprintMulti = 2f;
     public float sprintSpeed
     {
@@ -36,6 +36,7 @@ public class ThirdPersonMovement : MonoBehaviour
     public bool isLanding = false;
     public bool sprintInput = false;
     public bool isSprinting = false;
+    //public Vector3 velocityVector;
 /*    public float zoom = 0f;
     public float zoomStep = .1f;
     public float zoomMin = 1f;
@@ -55,6 +56,9 @@ public class ThirdPersonMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
+        //velocityVector = gameObject.transform.position - velocityVector;
+
 /*        thirdPersonCam.m_CameraDistance = zoom;
         if (Input.GetAxis("Mouse ScrollWheel") > 0)
         {
@@ -79,6 +83,7 @@ public class ThirdPersonMovement : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+        //velocityVector = gameObject.transform.position;
         if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
@@ -109,6 +114,7 @@ public class ThirdPersonMovement : MonoBehaviour
         {
             CheckIfStoppedMoving();
         }
+        //velocityVector = gameObject.transform.position - velocityVector;
         if (Mathf.Abs(direction.y) <= 0.1f && isFalling)
         {
             CheckIfStopFalling();
@@ -116,6 +122,7 @@ public class ThirdPersonMovement : MonoBehaviour
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+        
     }
 
     private void CheckIfStartedSprinting()
