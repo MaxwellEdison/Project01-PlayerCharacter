@@ -5,43 +5,73 @@ public class BlinkFX : MonoBehaviour
     GameObject bBall;
     GameObject bCamera;
     RenderTexture bTex;
+    public int myInst;
     public Quaternion wobb;
     public Mesh sphere;
     public Shader shader;
     public Texture texture;
-    Quaternion aquat;
-    Quaternion bQuat;
+    public Quaternion aQuat;
+    public Quaternion bQuat;
+    public Quaternion abQuat;
     float a = 0;
+    float b = 0;
+    float c = 0;
+    float d = 0;
     // Start is called before the first frame update
-    private void Awake()
+    void Start()
     {
-        gameObject.transform.localScale = Vector3.one;
-        bBall = new GameObject("bBall", typeof(MeshFilter),typeof(MeshRenderer));
+        Player player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        //myInst =
+        //gameObject.transform.localScale = Vector3.one;
+        bBall = new GameObject("bBall" + myInst, typeof(MeshFilter),typeof(MeshRenderer));
         bBall.transform.SetParent(gameObject.transform);
         bBall.transform.localPosition = new Vector3(0,0,0);
         bBall.transform.localScale = new Vector3(100,100,100);
         bBall.layer = 9;
-        bCamera = new GameObject("bCamera",typeof(Camera));
+        bCamera = new GameObject("bCamera" + myInst,typeof(Camera));
         bCamera.transform.SetParent(gameObject.transform);
         bCamera.transform.localPosition = Vector3.zero;
         bCamera.transform.localScale = Vector3.one;
         bCamera.layer = 9;
         bTex = new RenderTexture(512, 512, 24, RenderTextureFormat.Default);
-        bCamera.GetComponent<Camera>().targetTexture = bTex;
-        bCamera.GetComponent<Camera>().cullingMask = ~(1<<9);
+        bTex.name = "bTex" + myInst;
+        Camera bCam = bCamera.GetComponent<Camera>();
+        bCam.targetTexture = bTex;
+        bCam.fieldOfView = 150;
+        bCam.cullingMask = ~(1<<9);
         bBall.GetComponent<MeshFilter>().mesh = sphere;
-        bBall.GetComponent<Renderer>().material = new Material(shader);
-        bBall.GetComponent<Renderer>().material.mainTexture = bTex;
+        Renderer bRenderer = bBall.GetComponent<Renderer>();
+        bRenderer.material = new Material(shader);
+        bRenderer.material.mainTexture = bTex;
+        
         bCamera.transform.localRotation = wobb;
-
+        Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime)+myInst);
+        a = Random.Range(0, 100);
+        Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + myInst);
+        b = Random.Range(0, 100);
+        Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + myInst);
+        c = Random.Range(0, 100);
+        Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + myInst);
+        d = Random.Range(0, 100);
+        aQuat = new Quaternion(Random.Range(-100f, 100f), Random.Range(-100f, 100f), Random.Range(-100f, 100f), Random.Range(-100f, 100f));
+        bQuat = new Quaternion(Random.Range(-100f, 100f), Random.Range(-100f, 100f), Random.Range(-100f, 100f), Random.Range(-100f, 100f));
     }
 
     private void Update()
     {
-        
-        a = a + Time.deltaTime;
-        aquat = new Quaternion(0.0001f, 0.0001f, 0.0001f, 0.0001f);
-        bQuat = new Quaternion((Random.Range(0f, 0.1f)) * .00005f, (Random.Range(0f, 0.1f)) * .00005f, (Random.Range(0f, 0.1f)) * .00005f, (Random.Range(0f, 0.1f) * .00005f));
-        bCamera.transform.rotation = Quaternion.Slerp(aquat,bQuat,a);
+        Quaternion plrCam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Transform>().rotation;
+        Vector3 e = plrCam.eulerAngles;
+
+        a = Mathf.Repeat(a + (Time.deltaTime * 5)+Random.Range(0,1), 360);
+        Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + myInst);
+        b = Mathf.Repeat(a + (Time.deltaTime * 5) + Random.Range(0, 1), 360);
+        Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + myInst);
+        c = Mathf.Repeat(a + (Time.deltaTime * 5) + Random.Range(0, 1), 360);
+        Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + myInst);
+        d = Mathf.Repeat(a + (Time.deltaTime * 5) + Random.Range(0, 1), 100);
+        Quaternion abcd = new Quaternion(a, b, c, d);
+        abQuat = Quaternion.Euler(a+e.x,b+e.y,c+e.z);
+        bCamera.transform.rotation = abQuat;
+        //bBall.transform.rotation = abQuat;
     }
 }

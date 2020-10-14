@@ -8,6 +8,7 @@ public class Blink : Ability
     [SerializeField] Quaternion tempRotation;
     //[SerializeField] Rigidbody playerRB;
     [SerializeField] Rigidbody targetRB;
+    public int bfxInst = 0;
 
 
     float duration = .3f;
@@ -30,6 +31,7 @@ public class Blink : Ability
         {
             Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + i);
             qarray[i] = Mathf.Deg2Rad*Random.Range(0.0f, 0.5f);
+            
         }
 
 
@@ -44,10 +46,15 @@ public class Blink : Ability
                 Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + j);
                 barray[j] = Random.Range(10.0f, 90f);
             }
+            bfxInst += 1;
             Quaternion wobble2 = new Quaternion(barray[0], barray[1], barray[2], barray[3]);
             o_blinkBox[i] = Instantiate(_blinkBoxSpawned, new Vector3(origin.transform.position.x, origin.transform.position.y + 0.5f, origin.transform.position.z), wobble2);
+
             o_blinkBox[i].transform.localScale = new Vector3(i, i, i);
             o_blinkBox[i].GetComponent<BlinkFX>().wobb = wobble2;
+            BlinkFX bFX = o_blinkBox[i].GetComponent<BlinkFX>();
+            bFX.myInst = bfxInst;
+
         }
         for (int i = 0; i < 4; i++)
         {
@@ -56,9 +63,11 @@ public class Blink : Ability
                 Random.InitState(System.DateTime.Now.Millisecond + Mathf.RoundToInt(Time.deltaTime) + j);
                 carray[j] = Random.Range(10.0f, 90f);
             }
+            bfxInst += 1;
             Quaternion wobble3 = new Quaternion(carray[0], carray[1], carray[2], carray[3]);
             t_blinkBox[i] = Instantiate(_blinkBoxSpawned, new Vector3(target.transform.position.x, target.transform.position.y + 1.875f, target.transform.position.z), wobble3);
             t_blinkBox[i].transform.localScale = new Vector3(3.6f + i, 3.6f +  i, 3.6f + i);
+            t_blinkBox[i].GetComponent<BlinkFX>().myInst = bfxInst;
         }
 
         CharacterController plrControl = player.GetComponent<CharacterController>();
@@ -77,11 +86,11 @@ public class Blink : Ability
 
 
         Debug.Log("Blinked to " + target.name);
-        for(int i = 0; i < 4; i++)
+/*        for(int i = 0; i < 4; i++)
         {
             Destroy(o_blinkBox[i], duration);
             Destroy(t_blinkBox[i], duration);
-        }
+        }*/
 
     }
 }
