@@ -6,7 +6,6 @@ public class Health : MonoBehaviour
     private HealthUI healthUI;
     private GameObject healthBar;
     private GameObject abilityUI;
-    private GameObject mainCamera;
     public enum HealthType
     {
         player,

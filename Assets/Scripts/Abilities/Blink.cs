@@ -86,11 +86,11 @@ public class Blink : Ability
 
 
         Debug.Log("Blinked to " + target.name);
-/*        for(int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++)
         {
             Destroy(o_blinkBox[i], duration);
             Destroy(t_blinkBox[i], duration);
-        }*/
+        }
 
     }
 }
